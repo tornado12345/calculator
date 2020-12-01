@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
 #include "pch.h"
@@ -28,38 +28,40 @@ namespace CalculatorApp
         class MockCurrencyHttpClientWithResult : public CurrencyHttpClient
         {
         public:
-            MockCurrencyHttpClientWithResult(String^ staticResponse, String^ allRatiosResponse) :
-                m_staticResponse(staticResponse),
-                m_allRatiosResponse(allRatiosResponse)
+            MockCurrencyHttpClientWithResult(String ^ staticResponse, String ^ allRatiosResponse)
+                : m_staticResponse(staticResponse)
+                , m_allRatiosResponse(allRatiosResponse)
             {
             }
 
-            IAsyncOperationWithProgress<String^, HttpProgress>^ GetCurrencyMetadata() override
+            IAsyncOperationWithProgress<String ^, HttpProgress> ^ GetCurrencyMetadata() override
             {
                 return ref new MockAsyncOperationWithProgress(m_staticResponse);
             }
 
-            IAsyncOperationWithProgress<String^, HttpProgress>^ GetCurrencyRatios() override
+            IAsyncOperationWithProgress<String ^, HttpProgress> ^ GetCurrencyRatios() override
             {
                 return ref new MockAsyncOperationWithProgress(m_allRatiosResponse);
             }
 
         private:
-            String^ m_staticResponse;
-            String^ m_allRatiosResponse;
+            String ^ m_staticResponse;
+            String ^ m_allRatiosResponse;
         };
 
         class MockCurrencyHttpClientThrowsException : public CurrencyHttpClient
         {
         public:
-            MockCurrencyHttpClientThrowsException() {}
+            MockCurrencyHttpClientThrowsException()
+            {
+            }
 
-            IAsyncOperationWithProgress<String^, HttpProgress>^ GetCurrencyMetadata() override
+            IAsyncOperationWithProgress<String ^, HttpProgress> ^ GetCurrencyMetadata() override
             {
                 throw ref new NotImplementedException();
             }
 
-            IAsyncOperationWithProgress<String^, HttpProgress>^ GetCurrencyRatios() override
+            IAsyncOperationWithProgress<String ^, HttpProgress> ^ GetCurrencyRatios() override
             {
                 throw ref new NotImplementedException();
             }
@@ -70,19 +72,28 @@ namespace CalculatorApp
 class DataLoadedCallback : public UnitConversionManager::IViewModelCurrencyCallback
 {
 public:
-    DataLoadedCallback(task_completion_event<void> tce) :
-        m_task_completion_event{ tce }
-    {}
+    DataLoadedCallback(task_completion_event<void> tce)
+        : m_task_completion_event{ tce }
+    {
+    }
 
-    void CurrencyDataLoadFinished(bool didLoad) override
+    void CurrencyDataLoadFinished(bool /*didLoad*/) override
     {
         m_task_completion_event.set();
     }
 
-    void CurrencySymbolsCallback(_In_ const wstring& fromSymbol, _In_ const wstring& toSymbol) override {}
-    void CurrencyRatiosCallback(_In_ const wstring& ratioEquality, _In_ const wstring& accRatioEquality) override {}
-    void CurrencyTimestampCallback(_In_ const std::wstring& timestamp, bool isWeekOldData) override {}
-    void NetworkBehaviorChanged(_In_ int newBehavior) override {}
+    void CurrencySymbolsCallback(_In_ const wstring& /*fromSymbol*/, _In_ const wstring& /*toSymbol*/) override
+    {
+    }
+    void CurrencyRatiosCallback(_In_ const wstring& /*ratioEquality*/, _In_ const wstring& /*accRatioEquality*/) override
+    {
+    }
+    void CurrencyTimestampCallback(_In_ const std::wstring& /*timestamp*/, bool /*isWeekOldData*/) override
+    {
+    }
+    void NetworkBehaviorChanged(_In_ int /*newBehavior*/) override
+    {
+    }
 
 private:
     Concurrency::task_completion_event<void> m_task_completion_event;
@@ -92,9 +103,7 @@ namespace CalculatorUnitTests
 {
     constexpr auto sc_Language_EN = L"en-US";
 
-    const UCM::Category CURRENCY_CATEGORY = { NavCategory::Serialize(ViewMode::Currency), L"Currency", false /*supportsNegative*/ };
-
-    unique_ptr<CurrencyDataLoader> MakeLoaderWithResults(String^ staticResponse, String^ allRatiosResponse)
+    unique_ptr<CurrencyDataLoader> MakeLoaderWithResults(String ^ staticResponse, String ^ allRatiosResponse)
     {
         auto client = make_unique<MockCurrencyHttpClientWithResult>(staticResponse, allRatiosResponse);
         client->SetSourceCurrencyCode(StringReference(DefaultCurrencyCode.data()));
@@ -117,28 +126,28 @@ namespace CalculatorUnitTests
     {
         try
         {
-            StorageFolder^ localFolder = ApplicationData::Current->LocalCacheFolder;
-            StorageFile^ file = create_task(localFolder->CreateFileAsync(filename, CreationCollisionOption::ReplaceExisting)).get();
+            StorageFolder ^ localFolder = ApplicationData::Current->LocalCacheFolder;
+            StorageFile ^ file = create_task(localFolder->CreateFileAsync(filename, CreationCollisionOption::ReplaceExisting)).get();
             create_task(FileIO::WriteTextAsync(file, content)).wait();
             return true;
         }
-        catch (Exception^ ex)
+        catch (Exception ^ ex)
         {
             return false;
         }
     }
 
-    bool DeleteFileFromLocalCacheFolder(String^ filename)
+    bool DeleteFileFromLocalCacheFolder(String ^ filename)
     {
         try
         {
-            StorageFolder^ folder = ApplicationData::Current->LocalCacheFolder;
-            IAsyncOperation<StorageFile^>^ fileOperation = folder->GetFileAsync(filename);
-            StorageFile^ file = create_task(fileOperation).get();
+            StorageFolder ^ folder = ApplicationData::Current->LocalCacheFolder;
+            IAsyncOperation<StorageFile ^> ^ fileOperation = folder->GetFileAsync(filename);
+            StorageFile ^ file = create_task(fileOperation).get();
             create_task(file->DeleteAsync()).get();
             return true;
         }
-        catch (Platform::Exception^ ex)
+        catch (Platform::Exception ^ ex)
         {
             // FileNotFoundException is a valid result
             return ex->HResult == HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND);
@@ -164,12 +173,12 @@ namespace CalculatorUnitTests
         }
     }
 
-    void InsertToLocalSettings(String^ key, Object^ value)
+    void InsertToLocalSettings(String ^ key, Object ^ value)
     {
         ApplicationData::Current->LocalSettings->Values->Insert(key, value);
     }
 
-    void RemoveFromLocalSettings(String^ key)
+    void RemoveFromLocalSettings(String ^ key)
     {
         // Safe to call, even if the key does not exist.
         ApplicationData::Current->LocalSettings->Values->Remove(key);
@@ -188,414 +197,433 @@ namespace CalculatorUnitTests
         VERIFY_IS_TRUE(WriteToFileInLocalCacheFolder(CurrencyDataLoaderConstants::AllRatiosDataFilename, CurrencyHttpClient::GetRawAllRatiosDataResponse()));
     }
 
-    TEST_CLASS(CurrencyConverterLoadTests)
-    {
-    public:
-        TEST_METHOD_INITIALIZE(DeleteCacheFiles)
-        {
-            DeleteCurrencyCacheFiles();
-        }
+    TEST_CLASS(CurrencyConverterLoadTests){ public: TEST_METHOD_INITIALIZE(DeleteCacheFiles){ DeleteCurrencyCacheFiles();
+}
 
-        TEST_METHOD(LoadFromCache_Fail_NoCacheKey)
-        {
-            RemoveFromLocalSettings(CurrencyDataLoaderConstants::CacheTimestampKey);
+TEST_METHOD(LoadFromCache_Fail_NoCacheKey)
+{
+    RemoveFromLocalSettings(CurrencyDataLoaderConstants::CacheTimestampKey);
+    CurrencyDataLoader loader(nullptr, L"en-US");
 
-            CurrencyDataLoader loader{ nullptr };
-
-            bool didLoad = loader.TryLoadDataFromCacheAsync().get();
+    bool didLoad = loader.TryLoadDataFromCacheAsync().get();
 
-            VERIFY_IS_FALSE(didLoad);
-            VERIFY_IS_FALSE(loader.LoadFinished());
-            VERIFY_IS_FALSE(loader.LoadedFromCache());
-        }
+    VERIFY_IS_FALSE(didLoad);
+    VERIFY_IS_FALSE(loader.LoadFinished());
+    VERIFY_IS_FALSE(loader.LoadedFromCache());
+}
 
-        TEST_METHOD(LoadFromCache_Fail_OlderThanADay)
-        {
-            // Insert 24 hours ago so data is considered stale.
-            // This will cause the load from cache to fail.
-            DateTime now = Utils::GetUniversalSystemTime();
-            DateTime dayOld;
-            dayOld.UniversalTime = now.UniversalTime - CurrencyDataLoaderConstants::DayDuration - 1;
-            InsertToLocalSettings(CurrencyDataLoaderConstants::CacheTimestampKey, dayOld);
+TEST_METHOD(LoadFromCache_Fail_OlderThanADay)
+{
+    // Insert 24 hours ago so data is considered stale.
+    // This will cause the load from cache to fail.
+    DateTime now = Utils::GetUniversalSystemTime();
+    DateTime dayOld;
+    dayOld.UniversalTime = now.UniversalTime - CurrencyDataLoaderConstants::DayDuration - 1;
+    InsertToLocalSettings(CurrencyDataLoaderConstants::CacheTimestampKey, dayOld);
 
-            CurrencyDataLoader loader{ nullptr };
+    CurrencyDataLoader loader(nullptr, L"en-US");
 
-            bool didLoad = loader.TryLoadDataFromCacheAsync().get();
+    bool didLoad = loader.TryLoadDataFromCacheAsync().get();
 
-            VERIFY_IS_FALSE(didLoad);
-            VERIFY_IS_FALSE(loader.LoadFinished());
-            VERIFY_IS_FALSE(loader.LoadedFromCache());
-        }
+    VERIFY_IS_FALSE(didLoad);
+    VERIFY_IS_FALSE(loader.LoadFinished());
+    VERIFY_IS_FALSE(loader.LoadedFromCache());
+}
 
-        TEST_METHOD(LoadFromCache_Fail_StaticDataFileDoesNotExist)
-        {
-            // Insert current time so data is less than a day old.
-            // This will cause the load to continue to attempt to load the file.
-            DateTime now = Utils::GetUniversalSystemTime();
-            InsertToLocalSettings(CurrencyDataLoaderConstants::CacheTimestampKey, now);
+TEST_METHOD(LoadFromCache_Fail_StaticDataFileDoesNotExist)
+{
+    // Insert current time so data is less than a day old.
+    // This will cause the load to continue to attempt to load the file.
+    DateTime now = Utils::GetUniversalSystemTime();
+    InsertToLocalSettings(CurrencyDataLoaderConstants::CacheTimestampKey, now);
 
-            VERIFY_IS_TRUE(DeleteFileFromLocalCacheFolder(CurrencyDataLoaderConstants::StaticDataFilename));
-            VERIFY_IS_TRUE(WriteToFileInLocalCacheFolder(CurrencyDataLoaderConstants::AllRatiosDataFilename, CurrencyHttpClient::GetRawAllRatiosDataResponse()));
+    VERIFY_IS_TRUE(DeleteFileFromLocalCacheFolder(CurrencyDataLoaderConstants::StaticDataFilename));
+    VERIFY_IS_TRUE(WriteToFileInLocalCacheFolder(CurrencyDataLoaderConstants::AllRatiosDataFilename, CurrencyHttpClient::GetRawAllRatiosDataResponse()));
 
-            CurrencyDataLoader loader{ nullptr };
+    CurrencyDataLoader loader(nullptr, L"en-US");
 
-            bool didLoad = loader.TryLoadDataFromCacheAsync().get();
+    bool didLoad = loader.TryLoadDataFromCacheAsync().get();
 
-            VERIFY_IS_FALSE(didLoad);
-            VERIFY_IS_FALSE(loader.LoadFinished());
-            VERIFY_IS_FALSE(loader.LoadedFromCache());
-        }
+    VERIFY_IS_FALSE(didLoad);
+    VERIFY_IS_FALSE(loader.LoadFinished());
+    VERIFY_IS_FALSE(loader.LoadedFromCache());
+}
 
-        TEST_METHOD(LoadFromCache_Fail_AllRatiosDataFileDoesNotExist)
-        {
-            // Insert current time so data is less than a day old.
-            // This will cause the load to continue to attempt to load the file.
-            DateTime now = Utils::GetUniversalSystemTime();
-            InsertToLocalSettings(CurrencyDataLoaderConstants::CacheTimestampKey, now);
+TEST_METHOD(LoadFromCache_Fail_AllRatiosDataFileDoesNotExist)
+{
+    // Insert current time so data is less than a day old.
+    // This will cause the load to continue to attempt to load the file.
+    DateTime now = Utils::GetUniversalSystemTime();
+    InsertToLocalSettings(CurrencyDataLoaderConstants::CacheTimestampKey, now);
 
-            VERIFY_IS_TRUE(WriteToFileInLocalCacheFolder(CurrencyDataLoaderConstants::StaticDataFilename, CurrencyHttpClient::GetRawStaticDataResponse()));
-            VERIFY_IS_TRUE(DeleteFileFromLocalCacheFolder(CurrencyDataLoaderConstants::AllRatiosDataFilename));
+    VERIFY_IS_TRUE(WriteToFileInLocalCacheFolder(CurrencyDataLoaderConstants::StaticDataFilename, CurrencyHttpClient::GetRawStaticDataResponse()));
+    VERIFY_IS_TRUE(DeleteFileFromLocalCacheFolder(CurrencyDataLoaderConstants::AllRatiosDataFilename));
 
-            CurrencyDataLoader loader{ nullptr };
-
-            bool didLoad = loader.TryLoadDataFromCacheAsync().get();
-
-            VERIFY_IS_FALSE(didLoad);
-            VERIFY_IS_FALSE(loader.LoadFinished());
-            VERIFY_IS_FALSE(loader.LoadedFromCache());
-        }
-        
-        TEST_METHOD(LoadFromCache_Fail_ResponseLanguageChanged)
-        {
-            DateTime now = Utils::GetUniversalSystemTime();
-            InsertToLocalSettings(CurrencyDataLoaderConstants::CacheTimestampKey, now);
-
-            // Tests always use en-US as response language. Insert a different lang-code to fail the test.
-            InsertToLocalSettings(CurrencyDataLoaderConstants::CacheLangcodeKey, L"ar-SA");
+    CurrencyDataLoader loader(nullptr, L"en-US");
 
-            VERIFY_IS_TRUE(WriteToFileInLocalCacheFolder(CurrencyDataLoaderConstants::StaticDataFilename, CurrencyHttpClient::GetRawStaticDataResponse()));
-            VERIFY_IS_TRUE(DeleteFileFromLocalCacheFolder(CurrencyDataLoaderConstants::AllRatiosDataFilename));
-
-            CurrencyDataLoader loader{ nullptr };
-
-            bool didLoad = loader.TryLoadDataFromCacheAsync().get();
-
-            VERIFY_IS_FALSE(didLoad);
-            VERIFY_IS_FALSE(loader.LoadFinished());
-            VERIFY_IS_FALSE(loader.LoadedFromCache());
-        }
-
-        TEST_METHOD(LoadFromCache_Success)
-        {
-            StandardCacheSetup();
-
-            CurrencyDataLoader loader{ nullptr };
+    bool didLoad = loader.TryLoadDataFromCacheAsync().get();
 
-            bool didLoad = loader.TryLoadDataFromCacheAsync().get();
+    VERIFY_IS_FALSE(didLoad);
+    VERIFY_IS_FALSE(loader.LoadFinished());
+    VERIFY_IS_FALSE(loader.LoadedFromCache());
+}
 
-            VERIFY_IS_TRUE(didLoad);
-            VERIFY_IS_TRUE(loader.LoadFinished());
-            VERIFY_IS_TRUE(loader.LoadedFromCache());
-        }
+TEST_METHOD(LoadFromCache_Fail_ResponseLanguageChanged)
+{
+    DateTime now = Utils::GetUniversalSystemTime();
+    InsertToLocalSettings(CurrencyDataLoaderConstants::CacheTimestampKey, now);
 
-        TEST_METHOD(LoadFromWeb_Fail_ClientIsNullptr)
-        {
-            CurrencyDataLoader loader{ nullptr };
+    // Tests always use en-US as response language. Insert a different lang-code to fail the test.
+    InsertToLocalSettings(CurrencyDataLoaderConstants::CacheLangcodeKey, L"ar-SA");
 
-            bool didLoad = loader.TryLoadDataFromWebAsync().get();
+    VERIFY_IS_TRUE(WriteToFileInLocalCacheFolder(CurrencyDataLoaderConstants::StaticDataFilename, CurrencyHttpClient::GetRawStaticDataResponse()));
+    VERIFY_IS_TRUE(DeleteFileFromLocalCacheFolder(CurrencyDataLoaderConstants::AllRatiosDataFilename));
+
+    CurrencyDataLoader loader(nullptr, L"en-US");
 
-            VERIFY_IS_FALSE(didLoad);
-            VERIFY_IS_FALSE(loader.LoadFinished());
-            VERIFY_IS_FALSE(loader.LoadedFromWeb());
-        }
+    bool didLoad = loader.TryLoadDataFromCacheAsync().get();
 
-        TEST_METHOD(LoadFromWeb_Fail_WebException)
-        {
-            CurrencyDataLoader loader{ make_unique<MockCurrencyHttpClientThrowsException>() };
+    VERIFY_IS_FALSE(didLoad);
+    VERIFY_IS_FALSE(loader.LoadFinished());
+    VERIFY_IS_FALSE(loader.LoadedFromCache());
+}
 
-            bool didLoad = loader.TryLoadDataFromWebAsync().get();
+TEST_METHOD(LoadFromCache_Success)
+{
+    StandardCacheSetup();
 
-            VERIFY_IS_FALSE(didLoad);
-            VERIFY_IS_FALSE(loader.LoadFinished());
-            VERIFY_IS_FALSE(loader.LoadedFromWeb());
-        }
+    CurrencyDataLoader loader(nullptr, L"en-US");
 
-        TEST_METHOD(LoadFromWeb_Success)
-        {
-            String^ staticResponse = CurrencyHttpClient::GetRawStaticDataResponse();
-            String^ allRatiosResponse = CurrencyHttpClient::GetRawAllRatiosDataResponse();
-            unique_ptr<CurrencyDataLoader> loader = MakeLoaderWithResults(staticResponse, allRatiosResponse);
+    bool didLoad = loader.TryLoadDataFromCacheAsync().get();
 
-            bool didLoad = loader->TryLoadDataFromWebAsync().get();
+    VERIFY_IS_TRUE(didLoad);
+    VERIFY_IS_TRUE(loader.LoadFinished());
+    VERIFY_IS_TRUE(loader.LoadedFromCache());
+}
+
+TEST_METHOD(LoadFromWeb_Fail_ClientIsNullptr)
+{
+    CurrencyDataLoader loader(nullptr, L"en-US");
+
+    bool didLoad = loader.TryLoadDataFromWebAsync().get();
+
+    VERIFY_IS_FALSE(didLoad);
+    VERIFY_IS_FALSE(loader.LoadFinished());
+    VERIFY_IS_FALSE(loader.LoadedFromWeb());
+}
+
+TEST_METHOD(LoadFromWeb_Fail_WebException)
+{
+    CurrencyDataLoader loader(make_unique<MockCurrencyHttpClientThrowsException>(), L"en-US");
+
+    bool didLoad = loader.TryLoadDataFromWebAsync().get();
 
-            VERIFY_IS_TRUE(didLoad);
-            VERIFY_IS_TRUE(loader->LoadFinished());
-            VERIFY_IS_TRUE(loader->LoadedFromWeb());
-        }
+    VERIFY_IS_FALSE(didLoad);
+    VERIFY_IS_FALSE(loader.LoadFinished());
+    VERIFY_IS_FALSE(loader.LoadedFromWeb());
+}
+
+TEST_METHOD(LoadFromWeb_Success)
+{
+    String ^ staticResponse = CurrencyHttpClient::GetRawStaticDataResponse();
+    String ^ allRatiosResponse = CurrencyHttpClient::GetRawAllRatiosDataResponse();
+    unique_ptr<CurrencyDataLoader> loader = MakeLoaderWithResults(staticResponse, allRatiosResponse);
 
-        TEST_METHOD(Load_Success_LoadedFromCache)
-        {
-            StandardCacheSetup();
+    bool didLoad = loader->TryLoadDataFromWebAsync().get();
 
-            CurrencyDataLoader loader{ nullptr };
+    VERIFY_IS_TRUE(didLoad);
+    VERIFY_IS_TRUE(loader->LoadFinished());
+    VERIFY_IS_TRUE(loader->LoadedFromWeb());
+}
 
-            auto data_loaded_event = task_completion_event<void>();
-            loader.SetViewModelCallback(make_shared<DataLoadedCallback>(data_loaded_event));
+TEST_METHOD(Load_Success_LoadedFromCache)
+{
+    StandardCacheSetup();
+    CurrencyDataLoader loader(nullptr, L"en-US");
 
-            auto data_loaded_task = create_task(data_loaded_event);
-            loader.LoadData();
-            data_loaded_task.wait();
+    auto data_loaded_event = task_completion_event<void>();
+    loader.SetViewModelCallback(make_shared<DataLoadedCallback>(data_loaded_event));
 
-            VERIFY_IS_TRUE(loader.LoadFinished());
-            VERIFY_IS_TRUE(loader.LoadedFromCache());
-            VERIFY_IS_FALSE(loader.LoadedFromWeb());
-        }
+    auto data_loaded_task = create_task(data_loaded_event);
+    loader.LoadData();
+    data_loaded_task.wait();
 
-        TEST_METHOD(Load_Success_LoadedFromWeb)
-        {
-            // Insert 24 hours ago so data is considered stale.
-            // This will cause the load from cache to fail.
-            DateTime now = Utils::GetUniversalSystemTime();
-            DateTime dayOld;
-            dayOld.UniversalTime = now.UniversalTime - CurrencyDataLoaderConstants::DayDuration - 1;
-            InsertToLocalSettings(CurrencyDataLoaderConstants::CacheTimestampKey, dayOld);
+    VERIFY_IS_TRUE(loader.LoadFinished());
+    VERIFY_IS_TRUE(loader.LoadedFromCache());
+    VERIFY_IS_FALSE(loader.LoadedFromWeb());
+}
 
-            String^ staticResponse = CurrencyHttpClient::GetRawStaticDataResponse();
-            String^ allRatiosResponse = CurrencyHttpClient::GetRawAllRatiosDataResponse();
-            unique_ptr<CurrencyDataLoader> loader = MakeLoaderWithResults(staticResponse, allRatiosResponse);
+TEST_METHOD(Load_Success_LoadedFromWeb)
+{
+    // Insert 24 hours ago so data is considered stale.
+    // This will cause the load from cache to fail.
+    DateTime now = Utils::GetUniversalSystemTime();
+    DateTime dayOld;
+    dayOld.UniversalTime = now.UniversalTime - CurrencyDataLoaderConstants::DayDuration - 1;
+    InsertToLocalSettings(CurrencyDataLoaderConstants::CacheTimestampKey, dayOld);
 
-            auto data_loaded_event = task_completion_event<void>();
-            loader->SetViewModelCallback(make_shared<DataLoadedCallback>(data_loaded_event));
+    String ^ staticResponse = CurrencyHttpClient::GetRawStaticDataResponse();
+    String ^ allRatiosResponse = CurrencyHttpClient::GetRawAllRatiosDataResponse();
+    unique_ptr<CurrencyDataLoader> loader = MakeLoaderWithResults(staticResponse, allRatiosResponse);
 
-            auto data_loaded_task = create_task(data_loaded_event);
-            loader->LoadData();
-            data_loaded_task.wait();
+    auto data_loaded_event = task_completion_event<void>();
+    loader->SetViewModelCallback(make_shared<DataLoadedCallback>(data_loaded_event));
 
-            VERIFY_IS_TRUE(loader->LoadFinished());
-            VERIFY_IS_FALSE(loader->LoadedFromCache());
-            VERIFY_IS_TRUE(loader->LoadedFromWeb());
-        }
-    };
+    auto data_loaded_task = create_task(data_loaded_event);
+    loader->LoadData();
+    data_loaded_task.wait();
 
-    TEST_CLASS(CurrencyConverterUnitTests)
-    {
-        const UCM::Unit GetUnit(const vector<UCM::Unit>& unitList, const wstring& target)
-        {
-            return *find_if(begin(unitList), end(unitList), [&target](const UCM::Unit& u) { return u.abbreviation == target; });
-        }
+    VERIFY_IS_TRUE(loader->LoadFinished());
+    VERIFY_IS_FALSE(loader->LoadedFromCache());
+    VERIFY_IS_TRUE(loader->LoadedFromWeb());
+}
+}
+;
 
-        TEST_METHOD(Loaded_LoadOrderedUnits)
-        {
-            StandardCacheSetup();
+TEST_CLASS(CurrencyConverterUnitTests){
 
-            CurrencyDataLoader loader{ nullptr };
+    const UCM::Category CURRENCY_CATEGORY = { NavCategory::Serialize(ViewMode::Currency), L"Currency", false /*supportsNegative*/ };
 
-            auto data_loaded_event = task_completion_event<void>();
-            loader.SetViewModelCallback(make_shared<DataLoadedCallback>(data_loaded_event));
+    const UCM::Unit GetUnit(const vector<UCM::Unit>& unitList, const wstring& target){
+        return *find_if(begin(unitList), end(unitList), [&target](const UCM::Unit& u) { return u.abbreviation == target; });
+}
 
-            auto data_loaded_task = create_task(data_loaded_event);
-            loader.LoadData();
-            data_loaded_task.wait();
+TEST_METHOD(Loaded_LoadOrderedUnits)
+{
+    StandardCacheSetup();
+    CurrencyDataLoader loader(nullptr, L"en-US");
 
-            VERIFY_IS_TRUE(loader.LoadFinished());
-            VERIFY_IS_TRUE(loader.LoadedFromCache());
-            VERIFY_IS_FALSE(loader.LoadedFromWeb());
+    auto data_loaded_event = task_completion_event<void>();
+    loader.SetViewModelCallback(make_shared<DataLoadedCallback>(data_loaded_event));
 
-            vector<UCM::Unit> unitList = loader.LoadOrderedUnits(CURRENCY_CATEGORY);
-            VERIFY_ARE_EQUAL(size_t{ 2 }, unitList.size());
+    auto data_loaded_task = create_task(data_loaded_event);
+    loader.LoadData();
+    data_loaded_task.wait();
 
-            const UCM::Unit usdUnit = GetUnit(unitList, L"USD");
-            const UCM::Unit eurUnit = GetUnit(unitList, L"EUR");
+    VERIFY_IS_TRUE(loader.LoadFinished());
+    VERIFY_IS_TRUE(loader.LoadedFromCache());
+    VERIFY_IS_FALSE(loader.LoadedFromWeb());
 
-            VERIFY_ARE_EQUAL(StringReference(L"United States - Dollar"), ref new String(usdUnit.name.c_str()));
-            VERIFY_ARE_EQUAL(StringReference(L"USD"), ref new String(usdUnit.abbreviation.c_str()));
+    vector<UCM::Unit> unitList = loader.GetOrderedUnits(CURRENCY_CATEGORY);
+    VERIFY_ARE_EQUAL(size_t{ 2 }, unitList.size());
 
-            VERIFY_ARE_EQUAL(StringReference(L"Europe - Euro"), ref new String(eurUnit.name.c_str()));
-            VERIFY_ARE_EQUAL(StringReference(L"EUR"), ref new String(eurUnit.abbreviation.c_str()));
-        }
+    const UCM::Unit usdUnit = GetUnit(unitList, L"USD");
+    const UCM::Unit eurUnit = GetUnit(unitList, L"EUR");
 
-        TEST_METHOD(Loaded_LoadOrderedRatios)
-        {
-            StandardCacheSetup();
+    VERIFY_ARE_EQUAL(wstring(L"United States - Dollar"), usdUnit.name);
+    VERIFY_ARE_EQUAL(wstring(L"USD"), usdUnit.abbreviation);
 
-            CurrencyDataLoader loader{ nullptr };
+    VERIFY_ARE_EQUAL(wstring(L"Europe - Euro"), eurUnit.name);
+    VERIFY_ARE_EQUAL(wstring(L"EUR"), eurUnit.abbreviation);
+}
 
-            auto data_loaded_event = task_completion_event<void>();
-            loader.SetViewModelCallback(make_shared<DataLoadedCallback>(data_loaded_event));
+TEST_METHOD(Loaded_LoadOrderedRatios)
+{
+    StandardCacheSetup();
 
-            auto data_loaded_task = create_task(data_loaded_event);
-            loader.LoadData();
-            data_loaded_task.wait();
+    CurrencyDataLoader loader(nullptr, L"en-US");
 
-            VERIFY_IS_TRUE(loader.LoadFinished());
-            VERIFY_IS_TRUE(loader.LoadedFromCache());
-            VERIFY_IS_FALSE(loader.LoadedFromWeb());
+    auto data_loaded_event = task_completion_event<void>();
+    loader.SetViewModelCallback(make_shared<DataLoadedCallback>(data_loaded_event));
 
-            vector<UCM::Unit> unitList = loader.LoadOrderedUnits(CURRENCY_CATEGORY);
-            VERIFY_ARE_EQUAL(size_t{ 2 }, unitList.size());
+    auto data_loaded_task = create_task(data_loaded_event);
+    loader.LoadData();
+    data_loaded_task.wait();
 
-            const UCM::Unit usdUnit = GetUnit(unitList, L"USD");
-            const UCM::Unit eurUnit = GetUnit(unitList, L"EUR");
+    VERIFY_IS_TRUE(loader.LoadFinished());
+    VERIFY_IS_TRUE(loader.LoadedFromCache());
+    VERIFY_IS_FALSE(loader.LoadedFromWeb());
 
-            unordered_map<UCM::Unit, UCM::ConversionData, UCM::UnitHash> ratios = loader.LoadOrderedRatios(usdUnit);
-            VERIFY_ARE_EQUAL(size_t{ 2 }, ratios.size());
+    vector<UCM::Unit> unitList = loader.GetOrderedUnits(CURRENCY_CATEGORY);
+    VERIFY_ARE_EQUAL(size_t{ 2 }, unitList.size());
 
-            UCM::ConversionData usdRatioData = ratios[usdUnit];
-            VERIFY_IS_TRUE((std::abs(1.0 - usdRatioData.ratio) < 1e-1));
+    const UCM::Unit usdUnit = GetUnit(unitList, L"USD");
+    const UCM::Unit eurUnit = GetUnit(unitList, L"EUR");
 
-            UCM::ConversionData eurRatioData = ratios[eurUnit];
-            VERIFY_IS_TRUE((std::abs(0.920503 - eurRatioData.ratio) < 1e-6));
-        }
+    unordered_map<UCM::Unit, UCM::ConversionData, UCM::UnitHash> ratios = loader.LoadOrderedRatios(usdUnit);
+    VERIFY_ARE_EQUAL(size_t{ 2 }, ratios.size());
 
-        TEST_METHOD(Loaded_GetCurrencySymbols_Valid)
-        {
-            StandardCacheSetup();
+    UCM::ConversionData usdRatioData = ratios[usdUnit];
+    VERIFY_IS_TRUE((std::abs(1.0 - usdRatioData.ratio) < 1e-1));
 
-            CurrencyDataLoader loader{ nullptr };
+    UCM::ConversionData eurRatioData = ratios[eurUnit];
+    VERIFY_IS_TRUE((std::abs(0.920503 - eurRatioData.ratio) < 1e-6));
+}
 
-            auto data_loaded_event = task_completion_event<void>();
-            loader.SetViewModelCallback(make_shared<DataLoadedCallback>(data_loaded_event));
+TEST_METHOD(Loaded_GetCurrencySymbols_Valid)
+{
+    StandardCacheSetup();
 
-            auto data_loaded_task = create_task(data_loaded_event);
-            loader.LoadData();
-            data_loaded_task.wait();
+    CurrencyDataLoader loader(nullptr, L"en-US");
 
-            VERIFY_IS_TRUE(loader.LoadFinished());
-            VERIFY_IS_TRUE(loader.LoadedFromCache());
-            VERIFY_IS_FALSE(loader.LoadedFromWeb());
+    auto data_loaded_event = task_completion_event<void>();
+    loader.SetViewModelCallback(make_shared<DataLoadedCallback>(data_loaded_event));
 
-            vector<UCM::Unit> unitList = loader.LoadOrderedUnits(CURRENCY_CATEGORY);
-            VERIFY_ARE_EQUAL(size_t{ 2 }, unitList.size());
+    auto data_loaded_task = create_task(data_loaded_event);
+    loader.LoadData();
+    data_loaded_task.wait();
 
-            const UCM::Unit usdUnit = GetUnit(unitList, L"USD");
-            const UCM::Unit eurUnit = GetUnit(unitList, L"EUR");
+    VERIFY_IS_TRUE(loader.LoadFinished());
+    VERIFY_IS_TRUE(loader.LoadedFromCache());
+    VERIFY_IS_FALSE(loader.LoadedFromWeb());
 
-            const pair<wstring, wstring> symbols = loader.GetCurrencySymbols(usdUnit, eurUnit);
+    vector<UCM::Unit> unitList = loader.GetOrderedUnits(CURRENCY_CATEGORY);
+    VERIFY_ARE_EQUAL(size_t{ 2 }, unitList.size());
 
-            VERIFY_ARE_EQUAL(ref new String(L"$"), StringReference(symbols.first.c_str()));
-            VERIFY_ARE_EQUAL(ref new String(L"€"), StringReference(symbols.second.c_str()));
-        }
+    const UCM::Unit usdUnit = GetUnit(unitList, L"USD");
+    const UCM::Unit eurUnit = GetUnit(unitList, L"EUR");
 
-        TEST_METHOD(Loaded_GetCurrencySymbols_Invalid)
-        {
-            StandardCacheSetup();
+    const pair<wstring, wstring> symbols = loader.GetCurrencySymbols(usdUnit, eurUnit);
 
-            CurrencyDataLoader loader{ nullptr };
+    VERIFY_ARE_EQUAL(wstring(L"$"), symbols.first);
+    VERIFY_ARE_EQUAL(wstring(L"\x20ac"), symbols.second); // €
+}
 
-            auto data_loaded_event = task_completion_event<void>();
-            loader.SetViewModelCallback(make_shared<DataLoadedCallback>(data_loaded_event));
+TEST_METHOD(Loaded_GetCurrencySymbols_Invalid)
+{
+    StandardCacheSetup();
 
-            auto data_loaded_task = create_task(data_loaded_event);
-            loader.LoadData();
-            data_loaded_task.wait();
+    CurrencyDataLoader loader(nullptr, L"en-US");
 
-            VERIFY_IS_TRUE(loader.LoadFinished());
-            VERIFY_IS_TRUE(loader.LoadedFromCache());
-            VERIFY_IS_FALSE(loader.LoadedFromWeb());
+    auto data_loaded_event = task_completion_event<void>();
+    loader.SetViewModelCallback(make_shared<DataLoadedCallback>(data_loaded_event));
 
-            const UCM::Unit fakeUnit1 = {
-                1, L"fakeUnit1", L"FUD1", false, false, false
-            };
+    auto data_loaded_task = create_task(data_loaded_event);
+    loader.LoadData();
+    data_loaded_task.wait();
 
-            const UCM::Unit fakeUnit2 = {
-                2, L"fakeUnit2", L"FUD2", false, false, false
-            };
+    VERIFY_IS_TRUE(loader.LoadFinished());
+    VERIFY_IS_TRUE(loader.LoadedFromCache());
+    VERIFY_IS_FALSE(loader.LoadedFromWeb());
 
-            pair<wstring, wstring> symbols = loader.GetCurrencySymbols(fakeUnit1, fakeUnit2);
+    const UCM::Unit fakeUnit1 = { 1, L"fakeUnit1", L"FUD1", false, false, false };
 
-            VERIFY_ARE_EQUAL(ref new String(L""), StringReference(symbols.first.c_str()));
-            VERIFY_ARE_EQUAL(ref new String(L""), StringReference(symbols.second.c_str()));
+    const UCM::Unit fakeUnit2 = { 2, L"fakeUnit2", L"FUD2", false, false, false };
 
-            // Verify that when only one unit is valid, both symbols return as empty string.
-            vector<UCM::Unit> unitList = loader.LoadOrderedUnits(CURRENCY_CATEGORY);
-            VERIFY_ARE_EQUAL(size_t{ 2 }, unitList.size());
+    pair<wstring, wstring> symbols = loader.GetCurrencySymbols(fakeUnit1, fakeUnit2);
 
-            const UCM::Unit usdUnit = GetUnit(unitList, L"USD");
+    VERIFY_ARE_EQUAL(wstring(L""), wstring(symbols.first.c_str()));
+    VERIFY_ARE_EQUAL(wstring(L""), wstring(symbols.second.c_str()));
 
-            symbols = loader.GetCurrencySymbols(fakeUnit1, usdUnit);
+    // Verify that when only one unit is valid, both symbols return as empty string.
+    vector<UCM::Unit> unitList = loader.GetOrderedUnits(CURRENCY_CATEGORY);
+    VERIFY_ARE_EQUAL(size_t{ 2 }, unitList.size());
 
-            VERIFY_ARE_EQUAL(ref new String(L""), StringReference(symbols.first.c_str()));
-            VERIFY_ARE_EQUAL(ref new String(L""), StringReference(symbols.second.c_str()));
+    const UCM::Unit usdUnit = GetUnit(unitList, L"USD");
 
-            symbols = loader.GetCurrencySymbols(usdUnit, fakeUnit1);
+    symbols = loader.GetCurrencySymbols(fakeUnit1, usdUnit);
 
-            VERIFY_ARE_EQUAL(ref new String(L""), StringReference(symbols.first.c_str()));
-            VERIFY_ARE_EQUAL(ref new String(L""), StringReference(symbols.second.c_str()));
-        }
+    VERIFY_ARE_EQUAL(wstring(L""), symbols.first);
+    VERIFY_ARE_EQUAL(wstring(L""), symbols.second);
 
-        TEST_METHOD(Loaded_GetCurrencyRatioEquality_Valid)
-        {
-            StandardCacheSetup();
+    symbols = loader.GetCurrencySymbols(usdUnit, fakeUnit1);
 
-            CurrencyDataLoader loader{ nullptr };
+    VERIFY_ARE_EQUAL(wstring(L""), symbols.first);
+    VERIFY_ARE_EQUAL(wstring(L""), symbols.second);
+}
 
-            auto data_loaded_event = task_completion_event<void>();
-            loader.SetViewModelCallback(make_shared<DataLoadedCallback>(data_loaded_event));
+TEST_METHOD(Loaded_GetCurrencyRatioEquality_Valid)
+{
+    StandardCacheSetup();
 
-            auto data_loaded_task = create_task(data_loaded_event);
-            loader.LoadData();
-            data_loaded_task.wait();
+    CurrencyDataLoader loader(nullptr, L"en-US");
 
-            VERIFY_IS_TRUE(loader.LoadFinished());
-            VERIFY_IS_TRUE(loader.LoadedFromCache());
-            VERIFY_IS_FALSE(loader.LoadedFromWeb());
+    auto data_loaded_event = task_completion_event<void>();
+    loader.SetViewModelCallback(make_shared<DataLoadedCallback>(data_loaded_event));
 
-            vector<UCM::Unit> unitList = loader.LoadOrderedUnits(CURRENCY_CATEGORY);
-            VERIFY_ARE_EQUAL(size_t{ 2 }, unitList.size());
+    auto data_loaded_task = create_task(data_loaded_event);
+    loader.LoadData();
+    data_loaded_task.wait();
 
-            const UCM::Unit usdUnit = GetUnit(unitList, L"USD");
-            const UCM::Unit eurUnit = GetUnit(unitList, L"EUR");
+    VERIFY_IS_TRUE(loader.LoadFinished());
+    VERIFY_IS_TRUE(loader.LoadedFromCache());
+    VERIFY_IS_FALSE(loader.LoadedFromWeb());
 
-            const pair<wstring, wstring> ratio = loader.GetCurrencyRatioEquality(usdUnit, eurUnit);
+    vector<UCM::Unit> unitList = loader.GetOrderedUnits(CURRENCY_CATEGORY);
+    VERIFY_ARE_EQUAL(size_t{ 2 }, unitList.size());
 
-            VERIFY_ARE_EQUAL(ref new String(L"1 USD = 0.9205 EUR"), StringReference(ratio.first.c_str()));
-            VERIFY_ARE_EQUAL(ref new String(L"1 United States Dollar = 0.9205 Europe Euro"), StringReference(ratio.second.c_str()));
-        }
+    const UCM::Unit usdUnit = GetUnit(unitList, L"USD");
+    const UCM::Unit eurUnit = GetUnit(unitList, L"EUR");
 
-        TEST_METHOD(Loaded_GetCurrencyRatioEquality_Invalid)
-        {
-            StandardCacheSetup();
+    const pair<wstring, wstring> ratio = loader.GetCurrencyRatioEquality(usdUnit, eurUnit);
 
-            CurrencyDataLoader loader{ nullptr };
+    VERIFY_ARE_EQUAL(wstring(L"1 USD = 0.9205 EUR"), ratio.first);
+    VERIFY_ARE_EQUAL(wstring(L"1 United States Dollar = 0.9205 Europe Euro"), ratio.second);
+}
 
-            auto data_loaded_event = task_completion_event<void>();
-            loader.SetViewModelCallback(make_shared<DataLoadedCallback>(data_loaded_event));
+TEST_METHOD(Loaded_GetCurrencyRatioEquality_Invalid)
+{
+    StandardCacheSetup();
 
-            auto data_loaded_task = create_task(data_loaded_event);
-            loader.LoadData();
-            data_loaded_task.wait();
+    CurrencyDataLoader loader(nullptr, L"en-US");
 
-            VERIFY_IS_TRUE(loader.LoadFinished());
-            VERIFY_IS_TRUE(loader.LoadedFromCache());
-            VERIFY_IS_FALSE(loader.LoadedFromWeb());
+    auto data_loaded_event = task_completion_event<void>();
+    loader.SetViewModelCallback(make_shared<DataLoadedCallback>(data_loaded_event));
 
-            const UCM::Unit fakeUnit1 = {
-                1, L"fakeUnit1", L"fakeCountry1", L"FUD1", false, false, false
-            };
-            const UCM::Unit fakeUnit2 = {
-                2, L"fakeUnit2", L"fakeCountry2", L"FUD2", false, false, false
-            };
+    auto data_loaded_task = create_task(data_loaded_event);
+    loader.LoadData();
+    data_loaded_task.wait();
 
-            pair<wstring, wstring> ratio = loader.GetCurrencyRatioEquality(fakeUnit1, fakeUnit2);
+    VERIFY_IS_TRUE(loader.LoadFinished());
+    VERIFY_IS_TRUE(loader.LoadedFromCache());
+    VERIFY_IS_FALSE(loader.LoadedFromWeb());
 
-            VERIFY_ARE_EQUAL(ref new String(L""), StringReference(ratio.first.c_str()));
-            VERIFY_ARE_EQUAL(ref new String(L""), StringReference(ratio.second.c_str()));
+    const UCM::Unit fakeUnit1 = { 1, L"fakeUnit1", L"fakeCountry1", L"FUD1", false, false, false };
+    const UCM::Unit fakeUnit2 = { 2, L"fakeUnit2", L"fakeCountry2", L"FUD2", false, false, false };
 
-            // Verify that when only one unit is valid, both symbols return as empty string.
-            vector<UCM::Unit> unitList = loader.LoadOrderedUnits(CURRENCY_CATEGORY);
-            VERIFY_ARE_EQUAL(size_t{ 2 }, unitList.size());
+    pair<wstring, wstring> ratio = loader.GetCurrencyRatioEquality(fakeUnit1, fakeUnit2);
 
-            const UCM::Unit usdUnit = GetUnit(unitList, L"USD");
+    VERIFY_ARE_EQUAL(wstring(L""), ratio.first);
+    VERIFY_ARE_EQUAL(wstring(L""), ratio.second);
 
-            ratio = loader.GetCurrencyRatioEquality(fakeUnit1, usdUnit);
+    // Verify that when only one unit is valid, both symbols return as empty string.
+    vector<UCM::Unit> unitList = loader.GetOrderedUnits(CURRENCY_CATEGORY);
+    VERIFY_ARE_EQUAL(size_t{ 2 }, unitList.size());
 
-            VERIFY_ARE_EQUAL(ref new String(L""), StringReference(ratio.first.c_str()));
-            VERIFY_ARE_EQUAL(ref new String(L""), StringReference(ratio.second.c_str()));
+    const UCM::Unit usdUnit = GetUnit(unitList, L"USD");
 
-            ratio = loader.GetCurrencyRatioEquality(usdUnit, fakeUnit1);
+    ratio = loader.GetCurrencyRatioEquality(fakeUnit1, usdUnit);
 
-            VERIFY_ARE_EQUAL(ref new String(L""), StringReference(ratio.first.c_str()));
-            VERIFY_ARE_EQUAL(ref new String(L""), StringReference(ratio.second.c_str()));
-        }
-    };
+    VERIFY_ARE_EQUAL(wstring(L""), ratio.first);
+    VERIFY_ARE_EQUAL(wstring(L""), ratio.second);
+
+    ratio = loader.GetCurrencyRatioEquality(usdUnit, fakeUnit1);
+
+    VERIFY_ARE_EQUAL(wstring(L""), ratio.first);
+    VERIFY_ARE_EQUAL(wstring(L""), ratio.second);
+}
+
+TEST_METHOD(Test_RoundCurrencyRatio)
+{
+    CurrencyDataLoader loader{ nullptr };
+    VERIFY_ARE_EQUAL(CurrencyDataLoader::RoundCurrencyRatio(1234567), 1234567);
+    VERIFY_ARE_EQUAL(CurrencyDataLoader::RoundCurrencyRatio(0), 0);
+    VERIFY_ARE_EQUAL(CurrencyDataLoader::RoundCurrencyRatio(9999.999), 9999.999);
+    VERIFY_ARE_EQUAL(CurrencyDataLoader::RoundCurrencyRatio(8765.4321), 8765.4321);
+    VERIFY_ARE_EQUAL(CurrencyDataLoader::RoundCurrencyRatio(4815.162342), 4815.1623);
+    VERIFY_ARE_EQUAL(CurrencyDataLoader::RoundCurrencyRatio(4815.162358), 4815.1624);
+    VERIFY_ARE_EQUAL(CurrencyDataLoader::RoundCurrencyRatio(4815.162388934723), 4815.1624);
+    VERIFY_ARE_EQUAL(CurrencyDataLoader::RoundCurrencyRatio(0.12), 0.12);
+    VERIFY_ARE_EQUAL(CurrencyDataLoader::RoundCurrencyRatio(0.123), 0.123);
+    VERIFY_ARE_EQUAL(CurrencyDataLoader::RoundCurrencyRatio(0.1234), 0.1234);
+    VERIFY_ARE_EQUAL(CurrencyDataLoader::RoundCurrencyRatio(0.12343), 0.1234);
+    VERIFY_ARE_EQUAL(CurrencyDataLoader::RoundCurrencyRatio(0.0321), 0.0321);
+    VERIFY_ARE_EQUAL(CurrencyDataLoader::RoundCurrencyRatio(0.03211), 0.03211);
+    VERIFY_ARE_EQUAL(CurrencyDataLoader::RoundCurrencyRatio(0.032119), 0.03212);
+    VERIFY_ARE_EQUAL(CurrencyDataLoader::RoundCurrencyRatio(0.00322119), 0.003221);
+    VERIFY_ARE_EQUAL(CurrencyDataLoader::RoundCurrencyRatio(0.00123269), 0.001233);
+    VERIFY_ARE_EQUAL(CurrencyDataLoader::RoundCurrencyRatio(0.00076269), 0.0007627);
+    VERIFY_ARE_EQUAL(CurrencyDataLoader::RoundCurrencyRatio(0.000069), 0.000069);
+    VERIFY_ARE_EQUAL(CurrencyDataLoader::RoundCurrencyRatio(0.000061), 0.000061);
+    VERIFY_ARE_EQUAL(CurrencyDataLoader::RoundCurrencyRatio(0.000054612), 0.00005461);
+    VERIFY_ARE_EQUAL(CurrencyDataLoader::RoundCurrencyRatio(0.000054616), 0.00005462);
+    VERIFY_ARE_EQUAL(CurrencyDataLoader::RoundCurrencyRatio(0.000005416), 0.000005416);
+    VERIFY_ARE_EQUAL(CurrencyDataLoader::RoundCurrencyRatio(0.0000016134324), 0.000001613);
+    VERIFY_ARE_EQUAL(CurrencyDataLoader::RoundCurrencyRatio(0.0000096134324), 0.000009613);
+    VERIFY_ARE_EQUAL(CurrencyDataLoader::RoundCurrencyRatio(0.0000032169348392), 0.000003217);
+    VERIFY_ARE_EQUAL(CurrencyDataLoader::RoundCurrencyRatio(0.000000002134987218), 0.000000002135);
+    VERIFY_ARE_EQUAL(CurrencyDataLoader::RoundCurrencyRatio(0.000000000000087231445), 0.00000000000008723);
+}
+}
+;
 }

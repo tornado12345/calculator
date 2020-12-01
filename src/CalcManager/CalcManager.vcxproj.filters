@@ -89,6 +89,7 @@
     <ClCompile Include="CEngine\RationalMath.cpp">
       <Filter>CEngine</Filter>
     </ClCompile>
+    <ClCompile Include="NumberFormattingUtils.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Command.h" />
@@ -119,8 +120,6 @@
     <ClInclude Include="Ratpack\ratpak.h">
       <Filter>RatPack</Filter>
     </ClInclude>
-    <ClInclude Include="CalcException.h" />
-    <ClInclude Include="CalculatorVector.h" />
     <ClInclude Include="Header Files\CalcEngine.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -134,9 +133,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Header Files\History.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Header Files\scimath.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="UnitConverter.h" />
@@ -164,5 +160,6 @@
     <ClInclude Include="Header Files\RationalMath.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="NumberFormattingUtils.h" />
   </ItemGroup>
 </Project>

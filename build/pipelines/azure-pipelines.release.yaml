@@ -4,13 +4,20 @@
 # Store and the Windows image. This pipeline relies on Microsoft-internal resources to run.
 #
 
+schedules:
+- cron: "0 7 * * *"
+  displayName: Daily midnight build
+  branches:
+    include:
+    - master
+
 trigger: none
 pr: none
 
 variables:
   versionMajor: 10
-  versionMinor: 1902
-  versionBuild: $[counter('10.1902.*', 0)]
+  versionMinor: 2012
+  versionBuild: $[counter('10.2012.*', 0)]
   versionPatch: 0
 
 name: '$(versionMajor).$(versionMinor).$(versionBuild).$(versionPatch)'
@@ -30,25 +37,26 @@ jobs:
     platform: ARM
     condition: not(eq(variables['Build.Reason'], 'PullRequest'))
 
-- template: ./templates/build-app-internal.yaml
+- template: ./templates/run-ui-tests.yaml
   parameters:
-    platform: ARM64
-    condition: not(eq(variables['Build.Reason'], 'PullRequest'))
+    platform: x64
+    runsettingsFileName: CalculatorUITests.release.runsettings
+
+- template: ./templates/run-ui-tests.yaml
+  parameters:
+    platform: x86
+    runsettingsFileName: CalculatorUITests.release.runsettings
 
 - template: ./templates/run-unit-tests.yaml
   parameters:
     platform: x64
-    reimageServiceConnection: macool-sandbox-interactiveDesktopRS5
-    reimageSubscriptionId: 012a8008-c00f-45b3-9828-41ebba30141d
-    reimageResourceGroup: interactiveDesktopRS5
 
 - template: ./templates/run-unit-tests.yaml
   parameters:
     platform: x86
-    reimageServiceConnection: macool-sandbox-interactiveDesktopRS5
-    reimageSubscriptionId: 012a8008-c00f-45b3-9828-41ebba30141d
-    reimageResourceGroup: interactiveDesktopRS5
 
 - template: ./templates/package-appxbundle.yaml
+  parameters:
+    signBundle: true
 
 - template: ./templates/prepare-release-internalonly.yaml
